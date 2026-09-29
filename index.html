@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enterprise AI Operations Center</title>
+    <style>
+        :root {
+            --bg-base: #090D16;
+            --bg-surface: #0F172A;
+            --bg-card: #1E293B;
+            --text-primary: #F8FAFC;
+            --text-secondary: #94A3B8;
+            --accent-cyan: #0EA5E9;
+            --accent-neon: #38BDF8;
+            --status-green: #4ADE80;
+            --border-color: #334155;
+            --panel-glow: rgba(14, 165, 233, 0.08);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { background-color: var(--bg-base); color: var(--text-primary); font-family: 'Inter', sans-serif; display: flex; min-height: 100vh; overflow: hidden; }
+
+        .sidebar { width: 320px; background-color: var(--bg-surface); border-right: 2px solid var(--border-color); padding: 32px 24px; display: flex; flex-direction: column; gap: 24px; z-index: 10; }
+        .sidebar h3 { font-size: 16px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; color: #FFFFFF; border-bottom: 2px solid var(--border-color); padding-bottom: 12px; }
+        .input-group { display: flex; flex-direction: column; gap: 8px; }
+        .input-group label { font-size: 12px; color: var(--text-secondary); font-weight: 600; }
+        .input-group input, .input-group select { background-color: #090D16; border: 2px solid var(--border-color); border-radius: 6px; padding: 12px; color: #FFFFFF; font-size: 14px; outline: none; width: 100%; }
+        .input-group input:focus, .input-group select:focus { border-color: var(--accent-cyan); box-shadow: 0 0 10px rgba(14, 165, 233, 0.3); }
+        .trigger-btn { background-color: var(--accent-cyan); color: #FFFFFF; border: none; border-radius: 6px; padding: 14px; font-size: 14px; font-weight: 700; cursor: pointer; transition: all 0.2s ease; margin-top: 5px; }
+        .trigger-btn:hover { background-color: #0284C7; box-shadow: 0 0 15px rgba(14, 165, 233, 0.4); }
+        
+        .gateway-shield { background-color: #064E3B !important; color: #34D399 !important; border: 2px solid #059669 !important; border-radius: 6px; padding: 14px; text-align: center; font-weight: 800; font-size: 13px; letter-spacing: 0.05em; box-shadow: 0 0 15px rgba(52, 211, 153, 0.15); }
+        .vault-box { background-color: #0F172A; border: 1px dashed var(--accent-cyan); padding: 14px; border-radius: 6px; font-size: 13px; display: flex; justify-content: space-between; align-items: center; }
+
+        .main-content { flex: 1; padding: 40px; display: flex; flex-direction: column; gap: 32px; overflow-y: auto; }
+        .header h1 { font-size: 28px; font-weight: 700; color: #FFFFFF; margin-bottom: 4px; }
+        .header p { color: var(--text-secondary); font-size: 16px; }
+
+        .metrics-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
+        .metric-card { background-color: var(--bg-surface); border: 2px solid var(--border-color); border-radius: 8px; padding: 24px; box-shadow: 0 4px 12px var(--panel-glow); }
+        .metric-card label { font-size: 12px; color: var(--text-secondary); font-weight: 700; display: block; margin-bottom: 6px; text-transform: uppercase; }
+        .metric-card .value { font-size: 26px; font-weight: 700; color: #FFFFFF; }
+        .metric-card .pool { font-size: 11px; color: var(--accent-cyan); margin-top: 6px; }
+
+        .ops-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; }
+        .panel { background-color: var(--bg-surface); border: 2px solid var(--border-color); border-radius: 8px; padding: 24px; }
+        .panel h3 { margin-bottom: 20px; font-size: 16px; font-weight: 700; border-bottom: 2px solid var(--border-color); padding-bottom: 12px; color: #FFFFFF; }
+
+        .health-row { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; font-size: 14px; font-weight: bold; color: #E2E8F0; }
+        .health-dot { width: 10px; height: 10px; background-color: var(--status-green); border-radius: 50%; box-shadow: 0 0 10px var(--status-green); }
+
+        .pipeline-wrapper { display: flex; justify-content: space-between; background-color: #090D16; padding: 16px; border-radius: 6px; border-left: 4px solid var(--accent-cyan); margin-bottom: 20px; }
+        .pipeline-step { font-family: monospace; font-size: 12px; color: #4B5563; font-weight: 800; }
+        .step-active { color: var(--accent-neon); text-shadow: 0 0 8px var(--accent-neon); }
+
+        .terminal-box { background-color: #02040A; border: 2px solid var(--border-color); border-radius: 6px; padding: 16px; font-family: 'Consolas', monospace; color: var(--accent-neon); font-size: 13px; line-height: 1.6; white-space: pre-wrap; overflow-y: auto; max-height: 160px; display: none; box-shadow: inset 0 0 12px rgba(0,0,0,0.8); }
+
+        .proposal-output { display: none; flex-direction: column; gap: 12px; margin-top: 15px; }
+        .proposal-output textarea { background-color: #02040A; border: 2px solid var(--border-color); border-radius: 6px; padding: 16px; color: var(--text-primary); font-size: 14px; line-height: 1.6; outline: none; }
+        
+        .ledger-panel { width: 100%; display: none; }
+        .table-wrapper { width: 100%; overflow-x: auto; margin-top: 16px; }
+        table { width: 100%; border-collapse: collapse; text-align: left; font-size: 13px; }
+        th, td { padding: 14px; border-bottom: 2px solid var(--border-color); }
+        th { background-color: #090D16; color: var(--text-secondary); font-weight: 700; font-size: 11px; text-transform: uppercase; }
+        td { font-family: 'Consolas', monospace; color: var(--accent-neon); }
+        td.norm { font-family: inherit; color: var(--text-primary); }
+    </style>
+</head>
+<body>
+
+    <div class="sidebar">
+        <h3>Command Core</h3>
+        
+        <div class="input-group">
+            <label for="aiModel">Target Model Framework:</label>
+            <select id="aiModel">
+                <option value="OpenAI_GPT-4o">OpenAI GPT-4o</option>
+                <option value="Anthropic_Claude-3.5">Anthropic Claude-3.5</option>
+                <option value="Google_Gemini-1.5">Google Gemini-1.5 Pro</option>
+            </select>
+        </div>
+
+        <div class="input-group">
+            <label for="domain">Target Domain URL:</label>
+            <input type="text" id="domain" placeholder="e.g., enterprise-fleet.com">
+        </div>
+        
+        <button class="trigger-btn" id="triggerBtn">Trigger AI Pipeline</button>
+        
+        <div class="vault-box">
+            <div>
+                <p style="font-size:11px; color:var(--text-secondary); font-weight:bold;">VAULT ENCRYPTION</p>
+                <p style="font-family:monospace; color:var(--accent-neon); font-size:12px;">AES-256 SYSTEM LOCK</p>
+            </div>
+            <span style="color:var(--status-green); font-size:11px; font-weight:bold;">SECURE</span>
+        </div>
+
+        <div style="margin-top: auto; display: flex; flex-direction: column; gap: 16px;">
+            <div class="gateway-shield">Gateway Token: ACTIVE</div>
+            <p style="font-size: 11px; color: var(--text-secondary); text-align: center; font-family:monospace;">CONTROL SYS: V3-HYBRID</p>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <div class="header">
+            <h1>Enterprise AI Business Operations Center</h1>
+            <p>Automated workflow orchestration, telemetry monitoring, and business intelligence</p>
+        </div>
+
+        <div class="metrics-grid">
+            <div class="metric-card">
+                <label>System Operational State</label>
+                <div class="value" style="color: var(--status-green);">ONLINE</div>
+            </div>
+            <div class="metric-card">
+                <label>Total Processes Executed</label>
+                <div class="value" id="countCard">0</div>
+            </div>
+            <div class="metric-card">
+                <label>Avg Groundedness Index</label>
+                <div class="value" id="grdCard">--</div>
+                <div class="pool" id="poolCard">System Initialization Standby</div>
+            </div>
+            <div class="metric-card">
+                <label>Avg Accuracy Score</label>
+                <div class="value" id="accCard">--</div>
+            </div>
+        </div>
+
+        <div class="ops-grid">
+            <div class="panel">
+                <h3>System Infrastructure Health</h3>
+                <div class="health-row"><div class="health-dot"></div> API Gateway Node: Active & Secure</div>
+                <div class="health-row"><div class="health-dot"></div> Local Database Matrix: Connected (JSON Vault)</div>
+                <div class="health-row"><div class="health-dot"></div> AI Agent Orchestrator: Standby & Validated</div>
+                <div class="health-row"><div class="health-dot"></div> Background Task Queue: Idle (0 Active Workers)</div>
+                <div class="health-row"><div class="health-dot"></div> External Network Links: Operational</div>
+            </div>
+
+            <div class="panel">
+                <h3>Live Operational Orchestration Stream</h3>
+                <div class="pipeline-wrapper">
+                    <div class="pipeline-step" id="step1">[INGESTION]</div>
+                    <div class="pipeline-step" id="step2">[ANALYSIS]</div>
+                    <div class="pipeline-step" id="step3">[SECURITY VALIDATION]</div>
+                    <div class="pipeline-step" id="step4">[COMPILE]</div>
+                </div>
+                <div class="terminal-box" id="terminalBox"></div>
+            </div>
+        </div>
+
+        <div class="panel proposal-output" id="proposalPanel">
+            <h3>Automated Contextual Proposal Output</h3>
+            <div class="input-group">
+                <label id="threadLabel">Active System Payload Stream Output:</label>
